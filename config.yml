@@ -1,0 +1,30 @@
+# This file defines configuration values for the application's dependency injection container.
+ui:
+  # Options: "streamlit" or "pyqt"
+  interface: "streamlit"
+
+repositories:
+  code_repository:
+    args:
+      owner: "Muso-Health"
+      repo_name: "config-muso"
+
+  cicd_repository:
+    args:
+      owner: "Muso-Health"
+      repo_name: "config-muso"
+
+# Other repositories and services do not currently require external configuration arguments.
+# They are defined here as placeholders for future configuration.
+  logger: {}
+  data_warehouse_repository: {}
+  xform_api_repository: {}
+  cht_app_repository: {}
+  semantic_comparator_repository: {}
+  xlsform_repository: {}
+  rich_xlsform_repository: {}
+
+services:
+  form_comparator_service: {}
+  xlsform_comparator_service: {}
+  bulk_audit_service: {}

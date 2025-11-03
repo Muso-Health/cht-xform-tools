@@ -1,0 +1,55 @@
+    # English translations for Streamlit App
+    # Copyright (C) 2023
+    # This file is distributed under the same license as the streamlit_app package.
+    #
+    #, fuzzy
+    msgid ""
+    msgstr ""
+    "Project-Id-Version: 1.0\n"
+    "Report-Msgid-Bugs-To: \n"
+    "POT-Creation-Date: 2023-10-27 10:00+0000\n"
+    "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+    "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+    "Language-Team: English <en@li.org>\n"
+    "MIME-Version: 1.0\n"
+    "Content-Type: text/plain; charset=UTF-8\n"
+    "Content-Transfer-Encoding: 8bit\n"
+
+    msgid "XLSForm SQL Comparator"
+    msgstr "XLSForm SQL Comparator"
+
+    msgid "Upload Files & View Differences"
+    msgstr "Upload Files & View Differences"
+
+    msgid "Upload your XLSForm (.xlsx)"
+    msgstr "Upload your XLSForm (.xlsx)"
+
+    msgid "Upload your SQL file (.sql)"
+    msgstr "Upload your SQL file (.sql)"
+
+    msgid "SQL File Content"
+    msgstr "SQL File Content"
+
+    msgid "Comparison Results"
+    msgstr "Comparison Results"
+
+    msgid "**Element:** `{name}` (`{json_path}`)"
+    msgstr "**Element:** `{name}` (`{json_path}`)"
+
+    msgid "Found **{count}** times on lines: {lines}"
+    msgstr "Found **{count}** times on lines: {lines}"
+
+    msgid "No references found for any JSON path in the SQL file."
+    msgstr "No references found for any JSON path in the SQL file."
+
+    msgid "SQL Code"
+    msgstr "SQL Code"
+
+    msgid "An error occurred while processing files: {error_message}"
+    msgstr "An error occurred while processing files: {error_message}"
+
+    msgid "Please upload an XLSForm and an SQL file to start the comparison."
+    msgstr "Please upload an XLSForm and an SQL file to start the comparison."
+
+    msgid "SQL file content will appear here once uploaded."
+    msgstr "SQL file content will appear here once uploaded."
