@@ -1,13 +1,15 @@
 # XLSForm Data Source Tools
 
-This Streamlit application provides a suite of tools for developers and data analysts to audit, compare, and manage XLSForm data sources, particularly for CHT (Community Health Toolkit) applications.
+This application provides a suite of tools for developers and data analysts to audit, compare, and manage XLSForm data sources, particularly for CHT (Community Health Toolkit) applications.
+
+Built with a **Clean Architecture** and leveraging **Domain-Driven Design (DDD)** principles, the application's core logic is decoupled from its user interfaces and infrastructure concerns. This allows for flexible deployment and multiple presentation layers.
 
 ## 1. Setup and Installation
 
 ### Prerequisites
 
 1.  **Python 3.10+**
-2.  **Environment Variables**: The application relies on environment variables for authentication. Create a `.env` file in the project root or set these in your shell:
+2.  **Environment Variables**: The application relies on environment variables for authentication. Create a `.env` file in the project root or set these in your shell. A sample `export_env.sh` is provided for convenience.
     ```bash
     # For GitHub API access (required for most features)
     export GITHUB_PAT="your_github_personal_access_token"
@@ -33,16 +35,37 @@ This Streamlit application provides a suite of tools for developers and data ana
 
 ### Running the Application
 
-From the project root directory, run:
-```bash
-streamlit run main.py
-```
+This application supports multiple user interfaces. The choice of UI is determined by the `ui.interface` setting in `config.yml`.
+
+#### Running the Streamlit Web UI
+
+1.  Ensure `ui.interface` in `config.yml` is set to `streamlit`.
+2.  From the project root directory, run:
+    ```bash
+    streamlit run main.py
+    ```
+
+#### Running the PyQt Desktop UI
+
+1.  Ensure `ui.interface` in `config.yml` is set to `pyqt`.
+2.  From the project root directory, run:
+    ```bash
+    python main.py
+    ```
 
 ---
 
-## 2. How to Use the Application (Features)
+## 2. Architecture and Configuration
 
-The application is organized into five main tabs:
+This project utilizes a **Dependency Injection (DI) Container** to manage the wiring of its components, adhering to Clean Architecture principles. This provides significant flexibility and testability.
+
+-   **`config.yml`**: This file serves as the central configuration for the DI Container. It specifies which concrete implementations should be used for various contracts (e.g., which Logger, which Repository). Crucially, it also defines which User Interface (`streamlit` or `pyqt`) should be launched.
+
+-   **`containers.py`**: This file defines the application's object graph. It uses the `dependency-injector` library to read `config.yml` and automatically wire up all the services and repositories, injecting their dependencies. This means you can swap out implementations (e.g., a mock repository for a real one) by simply modifying `config.yml` without changing any Python code.
+
+## 3. How to Use the Application (Features)
+
+The application is organized into five main tabs, available in both UI versions:
 
 ### Tab 1: XLSForm SQL Comparator
 
@@ -83,7 +106,7 @@ The application is organized into five main tabs:
 
 ---
 
-## 3. Testing the Application
+## 4. Testing the Application
 
 The project uses `pytest` for testing. The tests are separated into fast **unit tests** (which run in isolation) and slow **integration tests** (which make real API calls).
 
