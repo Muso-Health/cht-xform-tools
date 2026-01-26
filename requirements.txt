@@ -10,3 +10,5 @@ google-genai
 dependency-injector
 PyYAML
 PyQt6
+click
+tabulate

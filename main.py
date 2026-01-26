@@ -1,39 +1,35 @@
+import sys
 from containers import Container
 
 def main():
+    """
+    This is the application's main entry point (Composition Root).
+    It initializes the dependency injection container and runs the selected UI.
+    """
+    # 1. Create and configure the container
     container = Container()
     container.config.from_yaml('config.yml')
+    container.form_context_config.from_yaml('form_context.yml')
+
+    # 2. Get a logger and handle potential startup errors
     try:
         logger = container.logger()
         logger.log_info("Application starting up...")
-
-        comparator_service = container.form_comparator_service()
-        bulk_audit_service = container.bulk_audit_service()
-        xlsform_comparator_service = container.xlsform_comparator_service()
-        
-        code_repository = container.code_repository()
-        cicd_repository = container.cicd_repository()
-        data_warehouse_repository = container.data_warehouse_repository()
-        xform_api_repository = container.xform_api_repository()
-
     except Exception as e:
-        try:
-            container.logger().log_exception(f"A critical error occurred during application initialization: {e}")
-        except:
-            print(f"A critical error occurred during application initialization: {e}")
-        return
+        print(f"A critical error occurred during logger initialization: {e}", file=sys.stderr)
+        sys.exit(1)
 
-    container.build_ui(
-        comparator_service=comparator_service,
-        bulk_audit_service=bulk_audit_service,
-        xlsform_comparator_service=xlsform_comparator_service,
-        code_repository=code_repository,
-        cicd_repository=cicd_repository,
-        data_warehouse_repository=data_warehouse_repository,
-        xform_api_repository=xform_api_repository
-    )
-    
-    logger.log_info("Application finished.")
+    # 3. Run the selected UI
+    # The container's `build_ui` provider is a pre-configured callable
+    # that already has all its dependencies injected.
+    try:
+        container.build_ui()
+        logger.log_info("Application finished.")
+    except Exception as e:
+        logger.log_exception(f"A critical error occurred while running the UI: {e}")
+        print(f"A critical error occurred: {e}", file=sys.stderr)
+        sys.exit(1)
 
-if __name__ == "__main__":
-    main()
+# This script is designed to be run by either `python main.py` or `streamlit run main.py`.
+# In both cases, we just need to call main(). The container handles the UI switching.
+main()

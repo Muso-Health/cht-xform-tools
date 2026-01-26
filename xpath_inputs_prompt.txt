@@ -1,0 +1,34 @@
+indeed for each formula starting with the ../inputs or the ../../inputs string and if the formula is "path like" there
+is a logic to get the meaning, first there are 3 folder name with special meaning, one is contact ../inputs/contact  or
+../../inputs/contact refers to the form subject, this is the CHT contact about whom the form is collecting data.
+A contact in the CHT can be a place of type c50_family, c40_chw_area, c30_supervisor_area, c20_health_area or c10_site,
+each c50_family belongs to one and only one c40_chw_area and this to one c30_supervisor_area and this
+to one c20_health_area and this to one and only one c10_site. The c10_site type places are the only to not have any
+parent.
+All places can have children of type person. In a place we can have a special person called the primary contact.
+Patients are the children of c50_families , chw are the children of the c40_chw_area, chw_supervisor are the person children
+ of the c30_supervisor_area. stock_manager and tb_focal_point are children of type person of a c20_health_area, finally
+ chw_manager are the children of type person of a c10_site.
+
+ The folder parent is used in combination with the contact folder, if ../inputs/contact  or
+ ../../inputs/contact is a patient then  ../inputs/contact/parent or ../../inputs/contact/parent is a c50_family of
+ the given contact. So ../inputs/contact/parent/parent/contact or ../../inputs/contact/parent/parent/contact is the primary
+ contact of the  c40_chw_area of the patient, this is, the only chw that is primary contact.
+ For each XForm we need to know  which CHT contact type is represented by  ../inputs/contact or ../../inputs/contact and
+ apply this logic to know which contact is represented and which property of the contact. '{explanation}'
+
+ Generate a brief, one-sentence description for each language.
+ for ../inputs/contact/parent/parent/contact/name with ../inputs/contact being a patient a good description is 'CHW name'
+ this is better than 'The formula refers to the name property of the chw primary contact, which belongs to the parent
+ place of the patient's c50_family.'
+
+            Your response MUST be a valid JSON object.
+            The JSON object MUST have exactly three keys: "fr", "en", and "bm".
+            The value for each key MUST be a simple string. DO NOT use nested objects.
+
+            Correct format example:
+            {{
+                "fr": "Description in French.",
+                "en": "Description in English.",
+                "bm": "Description in Bamanankan."
+            }}

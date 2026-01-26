@@ -15,6 +15,29 @@ class PandasRichXLSFormRepository(RichXLSFormRepository):
     to read and parse the .xlsx file into RichCHTElement objects.
     """
 
+    def get_survey_sheet_as_markdown(self, file_content: bytes) -> str:
+        """
+        Reads the 'survey' sheet from an XLSForm file and returns it as a Markdown table.
+        """
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp_file:
+            tmp_file.write(file_content)
+            temp_file_path = tmp_file.name
+        
+        try:
+            survey_df = pd.read_excel(temp_file_path, sheet_name='survey').fillna('')
+            # To prevent huge prompts, we only select the most relevant columns for context.
+            relevant_columns = [
+                'type', 'name', 'label', 'label::fr', 'label::en', 'label::bm', 
+                'calculation', 'required', 'relevant', 'constraint', 'choice_filter'
+            ]
+            # Filter the DataFrame to only include columns that actually exist in the sheet
+            existing_relevant_columns = [col for col in relevant_columns if col in survey_df.columns]
+            filtered_df = survey_df[existing_relevant_columns]
+            
+            return filtered_df.to_markdown(index=False)
+        finally:
+            os.unlink(temp_file_path)
+
     def get_rich_elements_from_file(self, file_content: bytes) -> List[RichCHTElement]:
         """
         Parses the content of an XLSForm file using pandas, including all title and calculation columns.

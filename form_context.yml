@@ -1,0 +1,19 @@
+# This file defines the context for the CHT inputs for each form.
+# It specifies the type and role of the 'contact' subject for a given form.
+
+anc_followup:
+  contact_type: ['person']
+  contact_role: ['patient']
+
+patient_assessment:
+  contact_type: ['person']
+  contact_role: ['patient']
+
+# Example for a form where the subject is a place (e.g., a family)
+# family_census:
+#   contact_type: ['c50_family', 'c40_chw_area', 'c30_supervisor_area', 'c20_health_area', 'c10_site']
+
+# Example for a form about a CHW
+# chw_performance_review:
+#   contact_type: ['person']
+#   contact_role: ['chw']
