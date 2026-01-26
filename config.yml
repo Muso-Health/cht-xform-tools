@@ -1,6 +1,6 @@
 # This file defines configuration values for the application's dependency injection container.
 ui:
-  # Options: "streamlit" or "pyqt"
+  # Options: "streamlit" or "pyqt" or "cli"
   interface: "streamlit"
 
 repositories:

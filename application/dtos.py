@@ -79,3 +79,31 @@ class XLSFormComparisonResultDTO:
     modified_elements: List[ModifiedElementDTO] = field(default_factory=list)
     new_elements: List[RichCHTElement] = field(default_factory=list)
     deleted_elements: List[RichCHTElement] = field(default_factory=list)
+
+# --- New DTOs for Data Catalog Feature ---
+
+@dataclass(frozen=True)
+class ParsedColumnDTO:
+    """Represents a single column parsed from a SQL view."""
+    column_name: str
+    json_path: str
+    sql_type: str
+
+@dataclass(frozen=False) # Changed to mutable to allow for enrichment
+class DataCatalogRowDTO:
+    """Represents a single row in the final data catalog output."""
+    formview_name: str
+    xlsform_name: str
+    column_name: str
+    sql_type: str
+    json_path: str
+    odk_type: str
+    calculation: str = "" # New field
+    label_fr: str = ""
+    label_en: str = ""
+    label_bm: str = ""
+
+@dataclass(frozen=False) # Changed to mutable to allow for enrichment
+class DataCatalogResultDTO:
+    """Holds the complete list of generated data catalog rows."""
+    catalog_rows: List[DataCatalogRowDTO]
