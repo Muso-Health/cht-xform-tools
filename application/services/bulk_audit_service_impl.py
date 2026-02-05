@@ -30,10 +30,6 @@ class BulkAuditServiceImpl(BulkAuditService):
         return pattern.search(sql_content) is not None
 
     def _is_unnest_pattern_present(self, sql_content: str, repeat_group_json_path: str) -> bool:
-        """
-        Robustly checks for the UNNEST(JSON_EXTRACT_ARRAY(...)) pattern using regex,
-        ignoring whitespace, newlines, and the specific table alias (e.g., f.doc).
-        """
         pattern = re.compile(
             r"UNNEST\s*\(\s*JSON_EXTRACT_ARRAY\s*\([^,]+,\s*['\"]" + re.escape(repeat_group_json_path) + r"['\"]\s*\)",
             re.IGNORECASE | re.DOTALL
@@ -64,6 +60,10 @@ class BulkAuditServiceImpl(BulkAuditService):
                 main_elements, repeat_groups_data, db_doc_groups_data = parsed_data["main_elements"], parsed_data["repeat_groups"], parsed_data["db_doc_groups"]
             except Exception as e:
                 self._logger.log_exception(f"Could not parse XLSForm for '{form_id}'. Error: {e}"); invalid_xlsforms.append(form_id); continue
+
+            # Log found db-doc groups
+            for group_name in db_doc_groups_data.keys():
+                self._logger.log_info(f"Found db-doc group '{group_name}' in form '{form_id}'")
 
             not_found_main, sql_content = [], None
             view_name = get_view_name(country_code, form_id)
