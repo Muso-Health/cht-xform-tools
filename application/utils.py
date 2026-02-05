@@ -33,7 +33,8 @@ _REPEAT_GROUP_VIEW_NAME_EXCEPTIONS = {
 # A centralized dictionary for db-doc group BigQuery view name exceptions.
 # The key is the db-doc group name, which is unique across all forms.
 _DB_DOC_GROUP_VIEW_NAME_EXCEPTIONS = {
-    "prescription_summary": "formview_stock_prescription_summary"
+    "prescription_summary": "formview_stock_prescription_summary",
+
 }
 
 def get_view_name(country_code: str, form_id: str) -> str:

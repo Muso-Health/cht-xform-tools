@@ -23,17 +23,11 @@ class BulkAuditServiceImpl(BulkAuditService):
         self._logger = logger
 
     def _is_extracted_in_struct(self, sql_content: str, json_path: str) -> bool:
-        pattern = re.compile(
-            r"JSON_EXTRACT_SCALAR\s*\(\s*item\s*,\s*['\"]" + re.escape(json_path) + r"['\"]\s*\)",
-            re.IGNORECASE | re.DOTALL
-        )
+        pattern = re.compile(r"JSON_EXTRACT_SCALAR\s*\(\s*item\s*,\s*['\"]" + re.escape(json_path) + r"['\"]\s*\)", re.IGNORECASE | re.DOTALL)
         return pattern.search(sql_content) is not None
 
     def _is_unnest_pattern_present(self, sql_content: str, repeat_group_json_path: str) -> bool:
-        pattern = re.compile(
-            r"UNNEST\s*\(\s*JSON_EXTRACT_ARRAY\s*\([^,]+,\s*['\"]" + re.escape(repeat_group_json_path) + r"['\"]\s*\)",
-            re.IGNORECASE | re.DOTALL
-        )
+        pattern = re.compile(r"UNNEST\s*\(\s*JSON_EXTRACT_ARRAY\s*\([^,]+,\s*['\"]" + re.escape(repeat_group_json_path) + r"['\"]\s*\)", re.IGNORECASE | re.DOTALL)
         return pattern.search(sql_content) is not None
 
     def perform_audit(self, country_code: str) -> BulkAuditResultDTO:
@@ -41,6 +35,8 @@ class BulkAuditServiceImpl(BulkAuditService):
         installed_forms = self._cht_app_repo.get_installed_xform_ids(country_code)
         
         compared_forms, missing_xlsforms, invalid_xlsforms, missing_views = [], [], [], []
+        processed_db_doc_groups = set() # Set to track audited db-doc groups
+
         project_id = "musoitproducts"
         dataset_id = "cht_mali_prod" if country_code.upper() == "MALI" else "cht_rci_prod"
 
@@ -61,7 +57,6 @@ class BulkAuditServiceImpl(BulkAuditService):
             except Exception as e:
                 self._logger.log_exception(f"Could not parse XLSForm for '{form_id}'. Error: {e}"); invalid_xlsforms.append(form_id); continue
 
-            # Log found db-doc groups
             for group_name in db_doc_groups_data.keys():
                 self._logger.log_info(f"Found db-doc group '{group_name}' in form '{form_id}'")
 
@@ -76,7 +71,7 @@ class BulkAuditServiceImpl(BulkAuditService):
                 missing_views.append(form_id)
 
             repeat_group_results = self._audit_repeat_groups(form_id, repeat_groups_data, sql_content, project_id, dataset_id)
-            db_doc_group_results = self._audit_db_doc_groups(form_id, db_doc_groups_data, project_id, dataset_id)
+            db_doc_group_results = self._audit_db_doc_groups(form_id, db_doc_groups_data, project_id, dataset_id, processed_db_doc_groups)
 
             if not_found_main or repeat_group_results or db_doc_group_results:
                 compared_forms.append(SingleFormComparisonResultDTO(form_id, not_found_main, repeat_group_results, db_doc_group_results))
@@ -108,9 +103,13 @@ class BulkAuditServiceImpl(BulkAuditService):
             results.append(RepeatGroupAuditResultDTO(repeat_name, handling_method, elements, not_found))
         return results
 
-    def _audit_db_doc_groups(self, form_id, db_doc_groups_data, project_id, dataset_id):
+    def _audit_db_doc_groups(self, form_id, db_doc_groups_data, project_id, dataset_id, processed_db_doc_groups):
         results = []
         for group_name, elements in db_doc_groups_data.items():
+            if group_name in processed_db_doc_groups:
+                self._logger.log_info(f"Skipping already audited db-doc group: {group_name}")
+                continue
+
             not_found, view_found = [], False
             view_name = get_db_doc_group_view_name(form_id, group_name)
             try:
@@ -123,4 +122,5 @@ class BulkAuditServiceImpl(BulkAuditService):
                 self._logger.log_warning(f"View not found for db-doc group: {group_name}")
             
             results.append(DbDocGroupAuditResultDTO(group_name, view_found, elements, not_found))
+            processed_db_doc_groups.add(group_name) # Mark as processed
         return results
