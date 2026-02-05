@@ -6,6 +6,7 @@ from application.contracts.form_comparator_service import FormComparatorService
 from domain.contracts.code_repository import CodeRepository
 from domain.contracts.data_warehouse_repository import DataWarehouseRepository
 from infrastructure.ui.streamlit.ui_utils import build_tree_from_results, _
+from application.utils import get_view_name  # Import the centralized utility
 
 def build_tab_sql_comparator(
     comparator_service: FormComparatorService,
@@ -49,10 +50,12 @@ def build_tab_sql_comparator(
         else:
             default_bq_project = "musoitproducts"
             default_bq_dataset = "cht_mali_prod" if selected_country_label == "MALI" else "cht_rci_prod"
-            default_bq_view = f"formview_{form_name_input}" if form_name_input else ""
+            default_bq_view = get_view_name(selected_country_label, form_name_input)
+            
             bq_project_id = st.text_input("BigQuery Project ID", value=default_bq_project, key="refactor_comparator_bq_project", on_change=clear_comparator_results)
             bq_dataset_id = st.text_input("BigQuery Dataset ID", value=default_bq_dataset, key="refactor_comparator_bq_dataset", on_change=clear_comparator_results)
             bq_view_id = st.text_input("BigQuery View ID", value=default_bq_view, key="refactor_comparator_bq_view", on_change=clear_comparator_results)
+            
             if st.button("Fetch View SQL", key="refactor_comparator_fetch_sql"):
                 if all([bq_project_id, bq_dataset_id, bq_view_id]):
                     try:
@@ -96,21 +99,50 @@ def build_tab_sql_comparator(
         if st.session_state.comparison_result:
             with st.expander("Comparison Results", expanded=True):
                 result_dto = st.session_state.comparison_result
-                if not result_dto.founds and not result_dto.not_founds and not result_dto.not_found_bm_elements:
-                    st.success(_("No JSON paths found in the form to compare."))
+                
+                # Categorize not_founds into critical and non-critical
+                critical_not_founds = []
+                inputs_not_founds = []
+                prescription_not_founds = []
+                
+                for item in result_dto.not_founds:
+                    is_inputs = item.json_path.startswith('$.inputs')
+                    is_prescription = 'prescription_summary' in item.json_path
+                    
+                    if is_inputs:
+                        inputs_not_founds.append(item)
+                    elif is_prescription:
+                        prescription_not_founds.append(item)
+                    else:
+                        critical_not_founds.append(item)
+
+                if not result_dto.founds and not critical_not_founds and not inputs_not_founds and not prescription_not_founds and not result_dto.not_found_bm_elements:
+                    st.success(_("No JSON paths found in the form to compare, or all paths are present in the SQL."))
                 else:
-                    if result_dto.not_founds:
+                    if critical_not_founds:
                         st.subheader(_("Not Found (Critical)"))
-                        not_found_tree = build_tree_from_results(result_dto.not_founds, icon="❌")
-                        tree_select(not_found_tree)
+                        critical_tree = build_tree_from_results(critical_not_founds, icon="❌")
+                        tree_select(critical_tree, key="sql_comparator_critical_tree")
+                    
+                    if inputs_not_founds:
+                        st.subheader(_("Not Found (Non-Critical: Inputs)"))
+                        inputs_tree = build_tree_from_results(inputs_not_founds, icon="ℹ️")
+                        tree_select(inputs_tree, key="sql_comparator_inputs_tree")
+
+                    if prescription_not_founds:
+                        st.subheader(_("Not Found (Non-Critical: Prescription)"))
+                        prescription_tree = build_tree_from_results(prescription_not_founds, icon="ℹ️")
+                        tree_select(prescription_tree, key="sql_comparator_prescription_tree")
+
                     if result_dto.not_found_bm_elements:
                         st.subheader(_("Not Found `_bm` Elements (RCI Only)"))
                         bm_tree = build_tree_from_results(result_dto.not_found_bm_elements, icon="ℹ️")
-                        tree_select(bm_tree)
+                        tree_select(bm_tree, key="sql_comparator_bm_tree")
+
                     if result_dto.founds:
                         st.subheader(_("Found in SQL"))
                         found_tree = build_tree_from_results(result_dto.founds, icon="✅")
-                        tree_select(found_tree)
+                        tree_select(found_tree, key="sql_comparator_found_tree")
 
     with col2:
         st.header(_("SQL Content"))

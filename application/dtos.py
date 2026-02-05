@@ -1,11 +1,14 @@
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import List, Tuple, Literal
 
-# We need to import the new RichCHTElement for type hinting
 import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from domain.entities.RichCHTElement import RichCHTElement
+from domain.entities.CHTElement import CHTElement
+
+# Define a literal type for repeat group handling methods
+HandlingMethod = Literal['ARRAY_IN_MAIN_VIEW', 'SEPARATE_VIEW', 'NOT_FOUND']
 
 @dataclass(frozen=True)
 class FoundReferenceDTO:
@@ -52,16 +55,26 @@ class WorkflowRunDTO:
     html_url: str
 
 @dataclass(frozen=True)
+class RepeatGroupAuditResultDTO:
+    """DTO for the audit result of a single repeat group."""
+    repeat_group_name: str
+    handling_method: HandlingMethod
+    elements: List[CHTElement]
+    not_found_elements: List[NotFoundElementDTO] = field(default_factory=list)
+
+@dataclass(frozen=True)
 class SingleFormComparisonResultDTO:
     """DTO for the result of a single form's audit where discrepancies were found."""
     form_id: str
     not_found_elements: List[NotFoundElementDTO] = field(default_factory=list)
+    repeat_groups: List[RepeatGroupAuditResultDTO] = field(default_factory=list)
 
 @dataclass(frozen=True)
 class BulkAuditResultDTO:
     """DTO for the result of a full bulk audit."""
     compared_forms: List[SingleFormComparisonResultDTO] = field(default_factory=list)
     missing_xlsforms: List[str] = field(default_factory=list)
+    invalid_xlsforms: List[str] = field(default_factory=list)
     missing_views: List[str] = field(default_factory=list)
 
 # --- DTOs for XLSForm vs XLSForm Comparison ---
@@ -70,7 +83,7 @@ class ModifiedElementDTO:
     """DTO for an element that was modified between two XLSForm versions."""
     old_element: RichCHTElement
     new_element: RichCHTElement
-    reason: str # e.g., "Moved", "Reworded", "Calculation Changed"
+    reason: str
 
 @dataclass(frozen=True)
 class XLSFormComparisonResultDTO:
@@ -89,7 +102,7 @@ class ParsedColumnDTO:
     json_path: str
     sql_type: str
 
-@dataclass(frozen=False) # Changed to mutable to allow for enrichment
+@dataclass(frozen=False)
 class DataCatalogRowDTO:
     """Represents a single row in the final data catalog output."""
     formview_name: str
@@ -98,12 +111,12 @@ class DataCatalogRowDTO:
     sql_type: str
     json_path: str
     odk_type: str
-    calculation: str = "" # New field
+    calculation: str = ""
     label_fr: str = ""
     label_en: str = ""
     label_bm: str = ""
 
-@dataclass(frozen=False) # Changed to mutable to allow for enrichment
+@dataclass(frozen=False)
 class DataCatalogResultDTO:
     """Holds the complete list of generated data catalog rows."""
     catalog_rows: List[DataCatalogRowDTO]

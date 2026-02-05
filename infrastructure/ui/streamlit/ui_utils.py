@@ -34,28 +34,41 @@ def build_tree_from_results(results: List[Any], icon: str) -> List[Dict[str, Any
         if not hasattr(item, 'json_path') or not item.json_path:
             continue
 
-        # Remove leading '$.' to create a cleaner tree structure
-        clean_path = item.json_path.lstrip('$.')
+        # Start with the full, valid JSONPath
+        full_path = item.json_path
+        
+        # Create a clean version for splitting, without the root '$'
+        clean_path = full_path
+        if clean_path.startswith('$.'):
+            clean_path = clean_path[2:]
+        elif clean_path.startswith('$'):
+            clean_path = clean_path[1:]
+
         path_parts = clean_path.split('.')
-
+        
         current_level = tree
-        current_path_list = []
+        # Track the path parts to build the value for intermediate nodes
+        current_path_for_value = []
         for i, part in enumerate(path_parts):
-            current_path_list.append(part)
-            current_path = '.'.join(current_path_list)
+            current_path_for_value.append(part)
 
-            # For the leaf node
+            # For the leaf node, use the original full path
             if i == len(path_parts) - 1:
-                label = f"{part} ({item.element_name})"
-                current_level[part] = {"label": label, "value": item.json_path, "icon": icon}
+                label = f"{part} ({item.json_path})"
+                current_level[part] = {"label": label, "value": full_path, "icon": icon}
             # For intermediate nodes
             else:
                 if part not in current_level:
-                    current_level[part] = {"label": part, "value": current_path, "_children": {}}
-                # Handle cases where a path part might already exist as a leaf
-                if "_children" not in current_level[part]:
-                    current_level[part]["_children"] = {}
-                current_level = current_level[part]["_children"]
+                    # Construct a valid, partial JSONPath for the value (e.g., '$.inputs.user')
+                    intermediate_value = '$.' + '.'.join(current_path_for_value)
+                    current_level[part] = {"label": part, "value": intermediate_value, "_children": {}}
+                    current_level = current_level[part]["_children"]
+                else:
+                    # If the part already exists, just move to the next level
+                    if "_children" not in current_level[part]:
+                         current_level[part]["_children"] = {}
+                    current_level = current_level[part]["_children"]
+
 
     def dict_to_list(node: Dict[str, Any]) -> List[Dict[str, Any]]:
         res = []
