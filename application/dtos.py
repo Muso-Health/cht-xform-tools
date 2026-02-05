@@ -7,12 +7,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 from domain.entities.RichCHTElement import RichCHTElement
 from domain.entities.CHTElement import CHTElement
 
-# Define a literal type for repeat group handling methods
 HandlingMethod = Literal['ARRAY_IN_MAIN_VIEW', 'SEPARATE_VIEW', 'NOT_FOUND']
 
 @dataclass(frozen=True)
 class FoundReferenceDTO:
-    """Data Transfer Object for a found reference."""
     element_name: str
     json_path: str
     count: int
@@ -20,103 +18,83 @@ class FoundReferenceDTO:
 
 @dataclass(frozen=True)
 class NotFoundElementDTO:
-    """Data Transfer Object for an element not found in the SQL."""
     element_name: str
     json_path: str
 
 @dataclass(frozen=True)
 class ComparisonResultDTO:
-    """Data Transfer Object for the XLSForm vs SQL comparison result."""
+    """Holds the found/not_found results for a single context (main body, one repeat, etc.)."""
     founds: List[FoundReferenceDTO] = field(default_factory=list)
     not_founds: List[NotFoundElementDTO] = field(default_factory=list)
     not_found_bm_elements: List[NotFoundElementDTO] = field(default_factory=list)
 
 @dataclass(frozen=True)
-class CommitDTO:
-    """Data Transfer Object for a single commit in a file's history."""
-    sha: str
-    author: str
-    date: str
-    message: str
+class RepeatGroupComparisonResultDTO:
+    """DTO for the comparison result of a single repeat group in the SQL Comparator."""
+    repeat_group_name: str
+    handling_method: HandlingMethod
+    comparison: ComparisonResultDTO
 
 @dataclass(frozen=True)
-class WorkflowRunDTO:
-    """Data Transfer Object for a single GitHub Actions workflow run."""
-    id: int
-    name: str
-    display_title: str
-    head_branch: str
-    head_sha: str
-    status: str
-    conclusion: str
-    actor_login: str
-    actor_avatar: str
-    created_at: str
-    html_url: str
+class DbDocGroupComparisonResultDTO:
+    """DTO for the comparison result of a single db-doc group in the SQL Comparator."""
+    group_name: str
+    view_found: bool
+    comparison: ComparisonResultDTO
+    
+@dataclass(frozen=True)
+class FullComparisonResultDTO:
+    """A comprehensive DTO for the entire result of the XLSForm SQL Comparator."""
+    main_body_comparison: ComparisonResultDTO
+    repeat_group_comparisons: List[RepeatGroupComparisonResultDTO] = field(default_factory=list)
+    db_doc_group_comparisons: List[DbDocGroupComparisonResultDTO] = field(default_factory=list)
 
+
+# --- DTOs for Bulk Audit ---
 @dataclass(frozen=True)
 class RepeatGroupAuditResultDTO:
-    """DTO for the audit result of a single repeat group."""
     repeat_group_name: str
     handling_method: HandlingMethod
     elements: List[CHTElement]
     not_found_elements: List[NotFoundElementDTO] = field(default_factory=list)
 
 @dataclass(frozen=True)
+class DbDocGroupAuditResultDTO:
+    group_name: str
+    view_found: bool
+    elements: List[CHTElement]
+    not_found_elements: List[NotFoundElementDTO] = field(default_factory=list)
+
+@dataclass(frozen=True)
 class SingleFormComparisonResultDTO:
-    """DTO for the result of a single form's audit where discrepancies were found."""
     form_id: str
     not_found_elements: List[NotFoundElementDTO] = field(default_factory=list)
     repeat_groups: List[RepeatGroupAuditResultDTO] = field(default_factory=list)
+    db_doc_groups: List[DbDocGroupAuditResultDTO] = field(default_factory=list)
 
 @dataclass(frozen=True)
 class BulkAuditResultDTO:
-    """DTO for the result of a full bulk audit."""
     compared_forms: List[SingleFormComparisonResultDTO] = field(default_factory=list)
     missing_xlsforms: List[str] = field(default_factory=list)
     invalid_xlsforms: List[str] = field(default_factory=list)
     missing_views: List[str] = field(default_factory=list)
 
-# --- DTOs for XLSForm vs XLSForm Comparison ---
+# --- Other DTOs ---
 @dataclass(frozen=True)
-class ModifiedElementDTO:
-    """DTO for an element that was modified between two XLSForm versions."""
-    old_element: RichCHTElement
-    new_element: RichCHTElement
-    reason: str
-
+class CommitDTO: sha: str; author: str; date: str; message: str
+@dataclass(frozen=True)
+class WorkflowRunDTO: id: int; name: str; display_title: str; head_branch: str; head_sha: str; status: str; conclusion: str; actor_login: str; actor_avatar: str; created_at: str; html_url: str
+@dataclass(frozen=True)
+class ModifiedElementDTO: old_element: RichCHTElement; new_element: RichCHTElement; reason: str
 @dataclass(frozen=True)
 class XLSFormComparisonResultDTO:
-    """DTO for the result of comparing two XLSForms."""
     unchanged_elements: List[Tuple[RichCHTElement, RichCHTElement]] = field(default_factory=list)
     modified_elements: List[ModifiedElementDTO] = field(default_factory=list)
     new_elements: List[RichCHTElement] = field(default_factory=list)
     deleted_elements: List[RichCHTElement] = field(default_factory=list)
-
-# --- New DTOs for Data Catalog Feature ---
-
 @dataclass(frozen=True)
-class ParsedColumnDTO:
-    """Represents a single column parsed from a SQL view."""
-    column_name: str
-    json_path: str
-    sql_type: str
-
+class ParsedColumnDTO: column_name: str; json_path: str; sql_type: str
 @dataclass(frozen=False)
-class DataCatalogRowDTO:
-    """Represents a single row in the final data catalog output."""
-    formview_name: str
-    xlsform_name: str
-    column_name: str
-    sql_type: str
-    json_path: str
-    odk_type: str
-    calculation: str = ""
-    label_fr: str = ""
-    label_en: str = ""
-    label_bm: str = ""
-
+class DataCatalogRowDTO: formview_name: str; xlsform_name: str; column_name: str; sql_type: str; json_path: str; odk_type: str; calculation: str = ""; label_fr: str = ""; label_en: str = ""; label_bm: str = ""
 @dataclass(frozen=False)
-class DataCatalogResultDTO:
-    """Holds the complete list of generated data catalog rows."""
-    catalog_rows: List[DataCatalogRowDTO]
+class DataCatalogResultDTO: catalog_rows: List[DataCatalogRowDTO]
